@@ -9,7 +9,7 @@
 <body ng-app="app">
 
 	
-	<div class="container" ng-controller="EditorController as editorCtrl">
+	<div class="container" ng-controller="EditorController as controlador">
 		<nav class="navbar navbar-light bg-light">
 			<a class="navbar-brand" href="#">
 				Compiladores
@@ -34,9 +34,9 @@
 					<h5>Editor</h5>
 					<div class="form-group">
 						<textarea 
-						ng-model="editorCtrl.code" 
+						ng-model="controlador.codigo" 
 						ng-model-options='{ debounce: 1000 }'
-						ng-change="editorCtrl.OnEditorChange()" class="form-control" id="editor" rows="50"></textarea>
+						ng-change="controlador.CambioEnEditor()" class="form-control" id="editor" rows="50"></textarea>
 
 					</div>
 				</div>
@@ -51,7 +51,7 @@
 								</div>
 								<div class="card-body">
 									<ul class="list-group list-group-flush">
-									    <li class="list-group-item" ng-repeat="token in editorCtrl.tokens track by $index">{{token}}</li>
+									    <li class="list-group-item" ng-repeat="token in controlador.tokens track by $index">{{token}}</li>
 									  </ul>
 								</div>
 							</div>

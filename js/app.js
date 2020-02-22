@@ -6,63 +6,66 @@
 	angular.module('app', []);
 	angular.module('app').controller('EditorController', EditorController);
 
-  // no need to inject $scope because we don't need it
+  // no se inyecta el $scope porque no lo necesitamos
   EditorController.$inject = [];
 
-  function EditorController() {
+  function EditorController() {	
 	
 		// assigning this to a loacal variable makes it easier to 
 		// declare properties and methods in the controller
 		var vm = this;
 		
-		// declare our variables
-		vm.title = "Compiladores!";
+		// declarar variables del controlador
 		vm.tokens = [];
-		vm.code = ""; // actual the code pasted in the editor-textarea
-		vm.OnEditorChange = function OnEditorChange() {			
-			var arrayOfLines = vm.code.match(/[^\r\n]+/g);
-			vm.tokens = processLines(arrayOfLines);	
+		vm.codigo = ""; // codigo pegado en el text-area
+		vm.CambioEnEditor = function CambioEnEditor() {			
+			var arrayDeLineas = vm.codigo.match(/[^\r\n]+/g);
+			vm.tokens = procesarLineas(arrayDeLineas);	
 		}
 
 
 		// no controller actions
-		function processLines(lines) {
-			var localTokens = [];
+		function procesarLineas(lineas) {
+			var tokenEnLineas = [];
 
-			// first split by lines
-			for (var lineIndex = 0; lineIndex < lines.length; lineIndex++) {
-				var actualLine = lines[lineIndex];
-				console.log(actualLine);
-				// go for each char in the line
+			// separar linea por linea
+			for (var lineaIndex = 0; lineaIndex < lineas.length; lineaIndex++) {
+				var lineaActual = lineas[lineaIndex];
+				console.log(lineaActual);				
 
-				var isSeparator = false;
-				var isToken = false;
-				var localToken = "";
-				for (var charIndex = 0; charIndex < actualLine.length; charIndex++) {
-					var actualChar = actualLine[charIndex];
-				  	// TODO add support for no token like comment and end line
-				  	if (/\s/.test(actualChar)) {
-				  		if (localToken.length == 0) {
+				var esSeparador = false;
+				var esToken = false;
+				var tokenActual = "";
+
+				// Ir caracter por caracter en la linea hasta encontrar un separador
+				for (var caracterIndex = 0; caracterIndex < lineaActual.length; caracterIndex++) {
+					var caracterActual = lineaActual[caracterIndex];
+				  	// TODO agregar soporte para no-token comom comentario o final de linea
+				  	if (/\s/.test(caracterActual)) {
+				  		if (tokenActual.length == 0) {
 				  			continue;
 				  		}
 				  		else {
-				  			isSeparator = true;
-				  			localTokens.push(localToken);
-				  			localToken = ""; // reset as the token is already added to the array
+				  			esSeparador = true;
+				  			tokenEnLineas.push(tokenActual);
+				  			tokenActual = ""; // reset al token ya que se encontro un separador
 				  		}
 				  	} else {
-				  		isSeparator = false;
-				  		localToken += actualChar;
+				  		esSeparador = false;
+				  		tokenActual += caracterActual;
 				  	}
 
 				}
-				if (localToken.length > 0) {
-					localTokens.push(localToken);
-					localToken = "";
+
+				// Agregar el token al arregle si es el token final, ya que no hay ningun separador final
+				if (tokenActual.length > 0) {
+					tokenEnLineas.push(tokenActual);
+					tokenActual = "";
 				}
+
 			}
-			console.log(localTokens);
-			return localTokens;			
+			console.log(tokenEnLineas);
+			return tokenEnLineas;			
 		}
 	}
 
