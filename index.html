@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>UMG - Compiladores</title>
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<script src="js/angular.min.js"></script>
+	<script src="js/app.js"></script>
+</head>
+<body ng-app="app">
+
+	
+	<div class="container" ng-controller="EditorController as editorCtrl">
+		<nav class="navbar navbar-light bg-light">
+			<a class="navbar-brand" href="#">
+				Compiladores
+			</a>		
+
+		</nav>
+		<div class="container">
+			<div class="form-inline pull-left">
+				<button class="btn btn-outline-success my-2 my-sm-0">
+					<i class="fas fa-file"></i>
+				</button>
+				<button class="btn btn-outline-success my-2 my-sm-0">
+					<i class="fas fa-save"></i>
+				</button>
+			</form>
+		</div>
+		<div class="clear"></div>
+		<br>
+		<div class="container">
+			<div class="row row-cols-2">
+				<div class="col">
+					<h5>Editor</h5>
+					<div class="form-group">
+						<textarea 
+						ng-model="editorCtrl.code" 
+						ng-model-options='{ debounce: 1000 }'
+						ng-change="editorCtrl.OnEditorChange()" class="form-control" id="editor" rows="50"></textarea>
+
+					</div>
+				</div>
+				<div class="col">
+					<h5>Analisis</h5>						
+
+					<div class="row">
+						<div class="col-8">
+							<div class="card">
+								<div class="card-header">
+									Tokens
+								</div>
+								<div class="card-body">
+									<ul class="list-group list-group-flush">
+									    <li class="list-group-item" ng-repeat="token in editorCtrl.tokens track by $index">{{token}}</li>
+									  </ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+
+			</div>
+		</div>
+		<div>
+			<script src="js/jquery-3.4.1.slim.min.js"></script>
+			<script src="js/popper.min.js"></script>
+			<script src="js/bootstrap.min.js"></script>
+			<script src="js/all.js" data-auto-replace-svg="nest"></script>
+
+		</body>
+		</html>
