@@ -5,6 +5,7 @@
 	<link rel="stylesheet" href="css/bootstrap.min.css">
 	<script src="js/angular.min.js"></script>
 	<script src="js/app.js"></script>
+	<script src="js/languaje-service.js"></script>
 </head>
 <body ng-app="app">
 
@@ -16,16 +17,24 @@
 			</a>		
 
 		</nav>
-		<div class="container">
-			<div class="form-inline pull-left">
+		<div class="row" style="margin:5px;">
+			<div class="col">
 				<button class="btn btn-outline-success my-2 my-sm-0">
 					<i class="fas fa-file"></i>
 				</button>
 				<button class="btn btn-outline-success my-2 my-sm-0">
 					<i class="fas fa-save"></i>
 				</button>
-			</form>
+				<div class="pull-right" style="float:right;">
+					<select class="form-control" ng-model="controlador.lenguaje">
+						<option value="js">JS</option>
+						<option value="csharp">C#</option>
+					</select>
+				</div>
+			</div>
 		</div>
+
+		
 		<div class="clear"></div>
 		<br>
 		<div class="container">
@@ -51,8 +60,8 @@
 								</div>
 								<div class="card-body">
 									<ul class="list-group list-group-flush">
-									    <li class="list-group-item" ng-repeat="token in controlador.tokens track by $index">{{token}}</li>
-									  </ul>
+										<li class="list-group-item" ng-repeat="token in controlador.tokens track by $index">{{token}}</li>
+									</ul>
 								</div>
 							</div>
 						</div>

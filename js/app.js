@@ -6,10 +6,10 @@
 	angular.module('app', []);
 	angular.module('app').controller('EditorController', EditorController);
 
-  // no se inyecta el $scope porque no lo necesitamos
-  EditorController.$inject = [];
+  	// no se inyecta el $scope porque no lo necesitamos
+  	EditorController.$inject = ['lenguaje'];
 
-  function EditorController() {	
+  	function EditorController(lenguaje) {	
 	
 		// assigning this to a loacal variable makes it easier to 
 		// declare properties and methods in the controller
@@ -17,10 +17,19 @@
 		
 		// declarar variables del controlador
 		vm.tokens = [];
+		vm.lenguaje = "js"
 		vm.codigo = ""; // codigo pegado en el text-area
 		vm.CambioEnEditor = function CambioEnEditor() {			
 			var arrayDeLineas = vm.codigo.match(/[^\r\n]+/g);
 			vm.tokens = procesarLineas(arrayDeLineas);	
+		}
+
+		vm.CambioDeLenguaje = function CambioDeLenguaje() {
+			CambiarEntorno(vm.lenguaje)
+		}
+
+		function CambiarEntorno(lenguaje) {
+			// body...
 		}
 
 
@@ -36,12 +45,12 @@
 				var esSeparador = false;
 				var esToken = false;
 				var tokenActual = "";
-
+				var vieneDeOperador = false;
 				// Ir caracter por caracter en la linea hasta encontrar un separador
 				for (var caracterIndex = 0; caracterIndex < lineaActual.length; caracterIndex++) {
 					var caracterActual = lineaActual[caracterIndex];
 				  	// TODO agregar soporte para no-token comom comentario o final de linea
-				  	if (/\s/.test(caracterActual)) {
+				  	if (/\s/.test(caracterActual)) { // verifica si el caracter no es un espacio en blanco
 				  		if (tokenActual.length == 0) {
 				  			continue;
 				  		}
@@ -51,13 +60,33 @@
 				  			tokenActual = ""; // reset al token ya que se encontro un separador
 				  		}
 				  	} else {
-				  		esSeparador = false;
-				  		tokenActual += caracterActual;
+				  		if (lenguaje.separador.includes(caracterActual)) {
+				  			if (!vieneDeOperador && tokenActual.length > 0) {
+				  				tokenEnLineas.push(tokenActual);				  			
+				  				tokenActual ="";
+				  			}
+
+				  			// if (!lenguaje.noToken.includes(caracterActual)) {
+				  			// 	tokenEnLineas.push(caracterActual);				  				
+				  			// } else 
+				  			if (lenguaje.separadorCombinado.includes(caracterActual)) {
+				  				tokenActual += caracterActual;				  				
+				  				vieneDeOperador = true;
+				  			} else {
+				  				tokenEnLineas.push(caracterActual);
+				  				vieneDeOperador = false;
+				  			}
+
+				  		} else {
+				  			vieneDeOperador = false;
+					  		esSeparador = false;
+					  		tokenActual += caracterActual;
+				  		}
 				  	}
 
 				}
 
-				// Agregar el token al arregle si es el token final, ya que no hay ningun separador final
+				// Agregar el token al arreglo si es el token final, ya que no hay ningun separador final
 				if (tokenActual.length > 0) {
 					tokenEnLineas.push(tokenActual);
 					tokenActual = "";
