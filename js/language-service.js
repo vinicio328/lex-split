@@ -10,6 +10,8 @@
 		this.propiedad = ".";
 		this.abrirMetodo = "(";
 		this.cerrarMetodo = ")";
+		this.abrirBloque = "{";
+		this.cerrarBloque = "}";
 		this.asignador = ['=', '+=', '-='];
 		this.separador = [';', ':', ',', '.', '+', '-', '/', '*', '=', '>', '<'];
 		this.separadorCombinado = ['+', '-', '=', '>', '<'];
