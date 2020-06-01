@@ -64,11 +64,11 @@ Array.prototype.unique = function() {
 		service.esCadenaAceptacion = false;
 		service.automatas = {
 			variable: {
-				f: ['@var', '@identifier', '@asignador', '@valor', '@comparador', '@fin'],
+				f: ['@var', '@identifier', '@asignador', '@valor', '@comparador', ';'],
 				q: [1, 2, 3, 4, 5, 6],
 				i: 1,
 				a: [6],
-				w: [[1, '@var', 2], [1, 'e', 2], [2, '@identifier', 3], [3, '@asignador', 4], [4, '@valor', 5], [4, '@identifier', 5], [5, '@comparador', 4], [5, '@fin', 6], [3, '@fin', 6]]
+				w: [[1, '@var', 2], [1, 'e', 2], [2, '@identifier', 3], [3, '@asignador', 4], [4, '@valor', 5], [4, '@identifier', 5], [5, '@comparador', 4], [5, ';', 6], [3, ';', 6]]
 			},
 			if: {            	
 				f: ['if', '(', ')', '@identifier', '@valor', '@comparador', '{', '}', 'else', '@logico'],
@@ -303,6 +303,10 @@ Array.prototype.unique = function() {
 		function obtenerConvertido(token) {
 			if (token.noConvert) {
 				return token.text;
+			}
+
+			if (token.text == ';') {
+				return ';';
 			}
 
 			if (token.isReserved) {

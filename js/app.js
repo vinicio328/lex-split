@@ -285,7 +285,7 @@
 						// comentario simple 
 						if (/\//.test(caracterActual)) {
 							// obtener caracter siguiente
-							var siguienteToken = lineaActual[caracterIndex++];
+							var siguienteToken = lineaActual[caracterIndex+1];
 							if (/\//.test(siguienteToken)) {
 								// es un comentario, obviar el resto de linea
 								if (tokenActual.length != 0) {
@@ -301,6 +301,7 @@
 								break;
 							}
 						}
+
 						if (lenguaje.separador.includes(caracterActual)) {
 
 							if (caracterActual == lenguaje.propiedad) {
@@ -312,6 +313,11 @@
 							}
 
 							if (!vieneDeOperador && tokenActual.length > 0) {
+								if (!isNaN(tokenActual) && caracterActual == lenguaje.propiedad) {
+									tokenActual += caracterActual;
+									token.isClass = false;
+									continue;
+								}
 								token.text = tokenActual;
 								token.fila = lineaIndex;
 								lineaActualTokens.push(token);
@@ -328,6 +334,15 @@
 								tokenActual += caracterActual;
 								vieneDeOperador = true;
 							} else {
+								if (tokenActual.length > 0){
+									token.text = tokenActual;
+									token.fila = lineaIndex;
+									lineaActualTokens.push(token);
+									tokenActual = ""; 
+									tokenPrevio = token;
+									token = new Token();
+								}
+
 								token.text = caracterActual;
 								token.fila = lineaIndex;
 								lineaActualTokens.push(token);
@@ -433,6 +448,14 @@
 					texto += tokenText + AplicarSpan("string") + " ";
 					continue;
 				}
+
+				if (/^-?[0-9]\d*(\.\d+)?(?:e-?\d+)?$/.test(tokenText)) {
+					token.isNumber = true;
+					token.isVariable = false;
+					texto += tokenText + AplicarSpan("numero") + " ";
+					continue;
+				}
+
 				// variable
 				if (/[a-zA-Z_$][0-9a-zA-Z_$]*/.test(tokenText)) {
 					token.isVariable = true;
@@ -452,14 +475,8 @@
 						simbolos.push(simbolo);
 					}
 					continue;
-				}
-
-				if (/^-?[0-9]\d*(\.\d+)?(?:e-?\d+)?$/.test(tokenText)) {
-					token.isNumber = true;
-					token.isVariable = false;
-					texto += tokenText + AplicarSpan("numero") + " ";
-					continue;
-				}
+				}	
+							
 				if (lenguaje.operador.includes(tokenText)) {
 					token.isOperator = true;
 					token.isVariable = false;
