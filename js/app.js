@@ -123,7 +123,35 @@
 									error.error = "Error en elemento " + AplicarSpan(automata.error); 
 								}
 								else {
-									error.error = "if incompleto";
+									error.error = AplicarSpan("if") + " incompleto";
+								}
+								vm.erroresSintacticos.push(error);
+							}
+							return true;
+						} 
+						else if (primerToken.text == "for") {
+							primerToken.noConvert = true;
+							cadenaTokens.push(primerToken);
+							linea.tokens.forEach(function(token, index) {
+								if (index == 0) { return true; } // continue
+								if (automata.automatas.for.f.includes(token.text)) {
+									token.noConvert = true;
+									cadenaTokens.push(token);
+								} else {
+									token.forceNumber = true;
+									cadenaTokens.push(token);
+								}
+							});
+
+							let esCadena = automata.validarAutomata(automata.automatas.for, cadenaTokens);
+							if (!esCadena) {
+								let error = new Error();
+								error.linea = lineaIndex +1;
+								if (automata.error.length > 0) {
+									error.error = "Error en elemento " + AplicarSpan(automata.error); 
+								}
+								else {
+									error.error = AplicarSpan("for") + " incompleto";
 								}
 								vm.erroresSintacticos.push(error);
 							}
@@ -411,6 +439,7 @@
 				}
 				if (lenguaje.logical.includes(tokenText)) {
 					token.isOperator = true;
+					token.isLogical = true;
 					token.isVariable = false;
 					texto += tokenText + AplicarSpan("logico") + " ";
 					continue;
@@ -463,6 +492,7 @@
 		isMethod = false;
 		isAssign = false;
 		isOperator = false;
+		isLogical  = false;
 		isSimbol = false;
 		isBool = false;
 		isString = false;
@@ -471,6 +501,7 @@
 		value = "";
 		fila = 0;
 		noConvert = false;
+		forceNumber = false;
 	}
 
 	class Simbolo {
