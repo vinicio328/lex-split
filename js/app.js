@@ -62,7 +62,8 @@
 		vm.erroresSintacticos = [];
 		vm.CambioEnEditor = function CambioEnEditor() {
 			vm.simbolos = [];
-			var arrayDeLineas = vm.codigo.match(/[^\r\n]+/g);
+			//var arrayDeLineas = vm.codigo.match(/[^\r\n]+/g);
+			var arrayDeLineas = vm.codigo.split("\n");
 			if (arrayDeLineas != null) {
 				vm.tokens = procesarLineas(arrayDeLineas, vm.simbolos);
 			}
@@ -152,6 +153,34 @@
 								}
 								else {
 									error.error = AplicarSpan("for") + " incompleto";
+								}
+								vm.erroresSintacticos.push(error);
+							}
+							return true;
+						}
+						else if (primerToken.text == "while") {
+							primerToken.noConvert = true;
+							cadenaTokens.push(primerToken);
+							linea.tokens.forEach(function(token, index) {
+								if (index == 0) { return true; } // continue
+								if (automata.automatas.while.f.includes(token.text)) {
+									token.noConvert = true;
+									cadenaTokens.push(token);
+								} else {
+									token.forceBool = true;
+									cadenaTokens.push(token);
+								}
+							});
+
+							let esCadena = automata.validarAutomata(automata.automatas.while, cadenaTokens);
+							if (!esCadena) {
+								let error = new Error();
+								error.linea = lineaIndex +1;
+								if (automata.error.length > 0) {
+									error.error = "Error en elemento " + AplicarSpan(automata.error); 
+								}
+								else {
+									error.error = AplicarSpan("while") + " incompleto";
 								}
 								vm.erroresSintacticos.push(error);
 							}
