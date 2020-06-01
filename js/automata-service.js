@@ -71,11 +71,11 @@ Array.prototype.unique = function() {
 				w: [[1, '@var', 2], [1, 'e', 2], [2, '@identifier', 3], [3, '@asignador', 4], [4, '@valor', 5], [4, '@identifier', 5], [5, '@comparador', 4], [5, '@fin', 6], [3, '@fin', 6]]
 			},
 			if: {            	
-				f: ['if', '(', ')', '@identifier', '@bool', '@valor', '@comparador', '{', '}', 'else', '@logico'],
+				f: ['if', '(', ')', '@identifier', '@valor', '@comparador', '{', '}', 'else', '@logico'],
 				q: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
 				i: 1,
 				a: [9, 12],
-				w: [[1, 'if', 2], [2, '(', 3], [3, '@bool', 6], [3, '@identifier', 4], [3, '@valor', 4], [4, '@comparador', 5], [5, '@valor', 6], [5, '@identifier', 6], [6, '@logico', 3], [6, ')', 7], [7, '{', 8], [8, '}', 9], [9, 'else', 10], [10, 'if', 2], [10, '{', 11,], [11, '}', 12]]
+				w: [[1, 'if', 2], [2, '(', 3], [3, '@identifier', 4], [3, '@valor', 4], [4, '@comparador', 5], [5, '@valor', 6], [5, '@identifier', 6], [6, '@logico', 3], [6, ')', 7], [7, '{', 8], [8, '}', 9], [9, 'else', 10], [10, 'if', 2], [10, '{', 11,], [11, '}', 12]]
 			},
 			for: {            	
 				f: ['for', '(', ')', '@var', '@identifier', '@asignador', '@valor', '@comparador', '{', '}', '++', '--', '@number', ';'],
