@@ -1,81 +1,209 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>UMG - Compiladores</title>
-	<link rel="stylesheet" href="css/bootstrap.min.css">
-	<script src="js/angular.min.js"></script>
-	<script src="js/app.js"></script>
-	<script src="js/languaje-service.js"></script>
+	<title>
+		UMG - Compiladores
+	</title>
+	<link href="css/bootstrap.min.css" rel="stylesheet"/>
+	<script src="js/utils.js">
+	</script>
+	<script src="js/angular.min.js">
+	</script>
+	<script src="js/angular-sanitize.js">
+	</script>
+	<script src="js/app.js">
+	</script>
+	<script src="js/language-service.js">
+	</script>
+	<script src="js/automata-service.js">
+	</script>
+	<script src="js/angular.ui.js">
+	</script>
+	<!-- Create a simple CodeMirror instance -->
+	<link href="lib/codemirror.css" rel="stylesheet">        
+</link>
+<script src="lib/codemirror.js">
+</script>
 </head>
 <body ng-app="app">
-
-	
-	<div class="container" ng-controller="EditorController as controlador">
+	<main class="container-fluid" ng-controller="EditorController as controlador" role="main">
 		<nav class="navbar navbar-light bg-light">
 			<a class="navbar-brand" href="#">
 				Compiladores
-			</a>		
-
+			</a>
 		</nav>
 		<div class="row" style="margin:5px;">
 			<div class="col">
-				<button class="btn btn-outline-success my-2 my-sm-0">
-					<i class="fas fa-file"></i>
+				<button class="btn btn-outline-success my-2 my-sm-0" id="exampleFormControlFile1" ng-file-select="onFileSelect($files)" onclick="document.getElementById('selectedFile').click();">
+					<i class="fas fa-file">
+					</i>
 				</button>
 				<button class="btn btn-outline-success my-2 my-sm-0">
-					<i class="fas fa-save"></i>
+					<i class="fas fa-save">
+					</i>
 				</button>
 				<div class="pull-right" style="float:right;">
 					<select class="form-control" ng-model="controlador.lenguaje">
-						<option value="js">JS</option>
-						<option value="csharp">C#</option>
+						<option value="js">
+							JS
+						</option>
+						<option value="csharp">
+							C#
+						</option>
 					</select>
 				</div>
 			</div>
 		</div>
-
-		
-		<div class="clear"></div>
+		<div class="row" style="margin:5px;">
+			<div class="col">
+				<button class="btn btn-outline-success my-2" ng-click="controlador.CambioEnEditor();">
+					Léxico
+				</button>
+				<button class="btn btn-outline-success my-2" data-target="#exampleModal" data-toggle="modal">
+					Tabla de Símbolos
+				</button>
+				<button class="btn btn-outline-success my-2" ng-click="controlador.AnalisisSintactico();">
+					Sintáctico
+				</button>
+				<button class="btn btn-outline-success my-2">
+					Semántico
+				</button>
+			</div>
+		</div>
+		<div class="clear">
+		</div>
 		<br>
-		<div class="container">
+		<div class="container-fluid">
 			<div class="row row-cols-2">
 				<div class="col">
-					<h5>Editor</h5>
+					<h5>
+						Editor
+					</h5>
 					<div class="form-group">
-						<textarea 
-						ng-model="controlador.codigo" 
-						ng-model-options='{ debounce: 1000 }'
-						ng-change="controlador.CambioEnEditor()" class="form-control" id="editor" rows="50"></textarea>
-
+						<textarea class="form-control" id="editor" name="editor" ng-change="controlador.CambioEnEditor()" ng-model="controlador.codigo" ng-model-options="{ debounce: 1000 }" rows="12" ui-codemirror="">
+						</textarea>
 					</div>
 				</div>
 				<div class="col">
-					<h5>Analisis</h5>						
-
-					<div class="row">
-						<div class="col-8">
+					<h5>
+						Lexico
+					</h5>
+					<div class="row" style="max-height: 260px !important; overflow: auto;">
+						<div class="col">
 							<div class="card">
 								<div class="card-header">
 									Tokens
 								</div>
 								<div class="card-body">
-									<ul class="list-group list-group-flush">
-										<li class="list-group-item" ng-repeat="token in controlador.tokens track by $index">{{token}}</li>
+									<ul class="list-group list-group-flush px-1 py-1">
+										<li class="list-group-item px-1 py-1" ng-bind-html="token.string" ng-repeat="token in controlador.tokens track by $index">
+										</li>
 									</ul>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-
-
+			</div>
+			<div class="row row-cols-2">
+				<div class="col">
+					<h5>
+						Sintactico
+					</h5>
+					<div class="row" style="max-height: 260px !important; overflow: auto;">
+						<div class="col">
+							<div class="card">
+								<div class="card-body">
+									<table class="table">
+										<thead>
+											<tr>
+												<th scope="col">Linea</th>
+												<th scope="col">Error</th>
+											</tr>
+										</thead>
+										<tbody>                                      	
+											<tr ng-repeat="error in controlador.erroresSintacticos track by $index">
+												<td>{{error.linea}}</td>
+												<td ng-bind-html="error.error"></td>
+											</tr>                                        
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col">
+					<h5>
+						Semantico
+					</h5>
+					<div class="row" style="max-height: 260px !important; overflow: auto;">
+						<div class="col">
+							<div class="card">
+								<div class="card-body">
+									<ul class="list-group list-group-flush px-1 py-1">
+										<li class="list-group-item px-1 py-1" ng-repeat="token in controlador.tokens track by $index">
+											{{token}}
+										</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- Modal -->
+			<div aria-hidden="true" aria-labelledby="exampleModalLabel" class="modal fade" id="exampleModal" role="dialog" tabindex="-1">
+				<div class="modal-dialog" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="exampleModalLabel">
+								Tabla De Simbolos
+							</h5>
+							<button aria-label="Close" class="close" data-dismiss="modal" type="button">
+								<span aria-hidden="true">
+									×
+								</span>
+							</button>
+						</div>
+						<div class="modal-body">
+							<table class="table">
+								<thead>
+									<tr>
+										<th scope="col">Nombre</th>
+										<th scope="col">Linea</th>
+										<th scope="col">Tipo</th>
+										<th scope="col">Valor</th>
+									</tr>
+								</thead>
+								<tbody>                                      	
+									<tr ng-repeat="simbolo in controlador.simbolos track by $index">
+										<th scope="row">{{simbolo.nombre}}</th>
+										<td>{{simbolo.linea + 1}}</td>
+										<td>{{simbolo.valor}}</td>
+										<td>{{simbolo.valor}}</td>
+									</tr>                                        
+								</tbody>
+							</table>
+						</div>
+						<div class="modal-footer">
+							<button class="btn btn-secondary" data-dismiss="modal" type="button">
+								Close
+							</button>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
-		<div>
-			<script src="js/jquery-3.4.1.slim.min.js"></script>
-			<script src="js/popper.min.js"></script>
-			<script src="js/bootstrap.min.js"></script>
-			<script src="js/all.js" data-auto-replace-svg="nest"></script>
-
-		</body>
-		</html>
+	</br>
+</main>
+<script src="js/jquery-3.4.1.slim.min.js">
+</script>
+<script src="js/popper.min.js">
+</script>
+<script src="js/bootstrap.min.js">
+</script>
+<script data-auto-replace-svg="nest" src="js/all.js">
+</script>
+</body>
+</html>

@@ -1,104 +1,452 @@
 // app in strict mode for safely
 (function() {
-
 	'use strict';
-
-	angular.module('app', []);
+	angular.module('app', ['ui', 'ngSanitize']);
 	angular.module('app').controller('EditorController', EditorController);
 
-  	// no se inyecta el $scope porque no lo necesitamos
-  	EditorController.$inject = ['lenguaje'];
+	var fileReader = function($q, $log) {
+		var onLoad = function(reader, deferred, scope) {
+			return function() {
+				scope.$apply(function() {
+					deferred.resolve(reader.result);
+				});
+			};
+		};
+		var onError = function(reader, deferred, scope) {
+			return function() {
+				scope.$apply(function() {
+					deferred.reject(reader.result);
+				});
+			};
+		};
+		var onProgress = function(reader, scope) {
+			return function(event) {
+				scope.$broadcast("fileProgress", {
+					total: event.total,
+					loaded: event.loaded
+				});
+			};
+		};
+		var getReader = function(deferred, scope) {
+			var reader = new FileReader();
+			reader.onload = onLoad(reader, deferred, scope);
+			reader.onerror = onError(reader, deferred, scope);
+			reader.onprogress = onProgress(reader, scope);
+			return reader;
+		};
+		var readAsText = function(file, scope) {
+			var deferred = $q.defer();
+			var reader = getReader(deferred, scope);
+			reader.readAsText(file);
+			return deferred.promise;
+		};
+		return {
+			readAsText: readAsText
+		};
+	};
 
-  	function EditorController(lenguaje) {	
-	
-		// assigning this to a loacal variable makes it easier to 
-		// declare properties and methods in the controller
-		var vm = this;
-		
-		// declarar variables del controlador
-		vm.tokens = [];
-		vm.lenguaje = "js"
-		vm.codigo = ""; // codigo pegado en el text-area
-		vm.CambioEnEditor = function CambioEnEditor() {			
-			var arrayDeLineas = vm.codigo.match(/[^\r\n]+/g);
-			vm.tokens = procesarLineas(arrayDeLineas);	
-		}
+	angular.module('app').factory("fileReader", ["$q", "$log", fileReader]);
 
-		vm.CambioDeLenguaje = function CambioDeLenguaje() {
-			CambiarEntorno(vm.lenguaje)
-		}
+	EditorController.$inject = ['$scope', 'lenguaje', 'automata', 'fileReader'];
 
-		function CambiarEntorno(lenguaje) {
-			// body...
-		}
+	function EditorController($scope, lenguaje, automata, fileReader) {
+        // assigning this to a local variable makes it easier to 
+        // declare properties and methods in the controller
+        var vm = this;
+
+        // declarar variables del controlador
+        vm.tokens = [];
+        vm.simbolos = [];
+        vm.lenguaje = "js";
+        vm.codigo = ""; // codigo pegado en el text-area
+        vm.erroresSintacticos = [];
+        vm.CambioEnEditor = function CambioEnEditor() {
+        	vm.simbolos = [];
+        	var arrayDeLineas = vm.codigo.match(/[^\r\n]+/g);
+        	if (arrayDeLineas != null) {
+        		vm.tokens = procesarLineas(arrayDeLineas, vm.simbolos);
+        	}
+        }
+
+        // Analisis simple, declaracion unica lineal, no continua
+        vm.AnalisisSintactico =  function AnalisisSintactico() {        	
+        	vm.erroresSintacticos = [];
+        	vm.tokens.forEach(function(linea, lineaIndex) {
+        		let cadenaTokens = [];
+        		let primerToken = linea.tokens[0];
+        		let ultimoToken = linea.tokens[linea.tokens.length - 1];        		        		
+        		// primer analisis variables  
+        		if (lenguaje.variable.includes(primerToken.text)) {        			
+        			// encontrar fin de linea
+        			cadenaTokens.push(primerToken);
+        			linea.tokens.forEach(function(token, index) {
+        				if (index == 0) { return true; } // continue
+        				cadenaTokens.push(token);
+        			});
+
+        			let esCadena = automata.validarAutomata(automata.automatas.variable, cadenaTokens);
+        			if (!esCadena) {
+        				let error = new Error();
+        				error.linea = lineaIndex +1;
+        				if (automata.error.length > 0) {
+        					error.error = "Error en elemento " + AplicarSpan(automata.error); 
+        				}
+        				else {
+        					error.error = "Falta " + AplicarSpan(";");
+        				}
+        				vm.erroresSintacticos.push(error);
+        			}
+        		}
+
+        	});
+        }
 
 
-		// no controller actions
-		function procesarLineas(lineas) {
-			var tokenEnLineas = [];
+        vm.CambioDeLenguaje = function() {
+        	CambiarEntorno(vm.lenguaje)
+        }
 
-			// separar linea por linea
-			for (var lineaIndex = 0; lineaIndex < lineas.length; lineaIndex++) {
-				var lineaActual = lineas[lineaIndex];
-				console.log(lineaActual);				
+        function CambiarEntorno(lenguaje) {
+            // body...
+            // TODO not supported yet, just JS
+        }
 
-				var esSeparador = false;
-				var esToken = false;
-				var tokenActual = "";
-				var vieneDeOperador = false;
-				// Ir caracter por caracter en la linea hasta encontrar un separador
-				for (var caracterIndex = 0; caracterIndex < lineaActual.length; caracterIndex++) {
-					var caracterActual = lineaActual[caracterIndex];
-				  	// TODO agregar soporte para no-token comom comentario o final de linea
-				  	if (/\s/.test(caracterActual)) { // verifica si el caracter no es un espacio en blanco
-				  		if (tokenActual.length == 0) {
-				  			continue;
-				  		}
-				  		else {
-				  			esSeparador = true;
-				  			tokenEnLineas.push(tokenActual);
-				  			tokenActual = ""; // reset al token ya que se encontro un separador
-				  		}
-				  	} else {
-				  		if (lenguaje.separador.includes(caracterActual)) {
-				  			if (!vieneDeOperador && tokenActual.length > 0) {
-				  				tokenEnLineas.push(tokenActual);				  			
-				  				tokenActual ="";
-				  			}
+        // Uso de scope porque se usa desde la directiva
+        $scope.getFile = function() {
+        	$scope.progress = 0;
+        	fileReader.readAsText($scope.file, $scope).then(function(result) {
+        		vm.codigo = result;
+        	});
+        };
 
-				  			// if (!lenguaje.noToken.includes(caracterActual)) {
-				  			// 	tokenEnLineas.push(caracterActual);				  				
-				  			// } else 
-				  			if (lenguaje.separadorCombinado.includes(caracterActual)) {
-				  				tokenActual += caracterActual;				  				
-				  				vieneDeOperador = true;
-				  			} else {
-				  				tokenEnLineas.push(caracterActual);
-				  				vieneDeOperador = false;
-				  			}
+        $scope.$on("fileProgress", function(e, progress) {
+        	$scope.progress = progress.loaded / progress.total;
+        });
 
-				  		} else {
-				  			vieneDeOperador = false;
-					  		esSeparador = false;
-					  		tokenActual += caracterActual;
-				  		}
-				  	}
+        // no controller actions
+        function procesarLineas(lineas, simbolos) {
+        	var tokenEnLineas = [];
+            // separar linea por linea
+            for (var lineaIndex = 0; lineaIndex < lineas.length; lineaIndex++) {
+            	var lineaActual = lineas[lineaIndex];
+                // array de tokens por linea y linea actual con atributos
+                var lineaActualTokens = [];
+                var lineaString = "";
+                console.log(lineaActual);
+                var esSeparador = false;
+                var esToken = false;
+                var tokenActual = "";
+                var token = new Token();
+                var tokenPrevio = new Token();
+                var vieneDeOperador = false;
+                var vieneDeLiteral = false;
+                var vieneDePunto = false;
+                var incluyeApertura = false;
+                // Ir caracter por caracter en la linea hasta encontrar un separador
+                for (var caracterIndex = 0; caracterIndex < lineaActual.length; caracterIndex++) {
+                	var caracterActual = lineaActual[caracterIndex];
+                    // TODO agregar soporte para no-token comom comentario o final de linea
+                    // verificar literales 
+                    if (lenguaje.literales.includes(caracterActual)) {
+                    	if (vieneDeLiteral) {
+                    		token.text = tokenActual + caracterActual;
+                    		token.isString = true;
+                    		token.fila = lineaIndex;
+                    		lineaActualTokens.push(token);
+                    		tokenActual = "";
+                    		tokenPrevio = token;
+                    		token = new Token();
+                    		tokenActual = "";
+                    		vieneDeLiteral = false;
+                    		vieneDeOperador = false;
+                    		continue;
+                    	} else {
+                    		vieneDeLiteral = true;
+                    	}
+                    }
 
-				}
+                    // Si estamos en un literal no importa el contenido
+                    if (vieneDeLiteral) {
+                    	tokenActual += caracterActual;
+                    	continue;
+                    }
 
-				// Agregar el token al arreglo si es el token final, ya que no hay ningun separador final
-				if (tokenActual.length > 0) {
-					tokenEnLineas.push(tokenActual);
-					tokenActual = "";
-				}
+                    if (/\s/.test(caracterActual)) { // verifica si el caracter no es un espacio en blanco
+                    	if (tokenActual.length == 0) {
+                    		continue;
+                    	} else {
+                    		esSeparador = true;
+                    		token.text = tokenActual;
+                    		token.fila = lineaIndex;
+                    		lineaActualTokens.push(token);
+                            tokenActual = ""; // reset al token ya que se encontro un separador
+                            tokenPrevio = token;
+                            token = new Token();
+                            vieneDeOperador = false;
+                            vieneDeLiteral = false;
 
-			}
-			console.log(tokenEnLineas);
-			return tokenEnLineas;			
-		}
-	}
+                            if (lenguaje.asignador.includes(tokenPrevio.text)) {
+                            	tokenPrevio.isAssign = true;
+                            }
+                        }
+                    } else {
+                        // verificar comentarios
+                        // comentario simple 
+                        if (/\//.test(caracterActual)) {
+                            // obtener caracter siguiente
+                            var siguienteToken = lineaActual[caracterIndex++];
+                            if (/\//.test(siguienteToken)) {
+                                // es un comentario, obviar el resto de linea
+                                if (tokenActual.length != 0) {
+                                	token.text = tokenActual;
+                                	token.fila = lineaIndex;
+                                	lineaActualTokens.push(token);
+                                	tokenActual = "";
+                                	tokenPrevio = token;
+                                	token = new Token();
+                                	tokenActual = "";
+                                	vieneDeOperador = false;
+                                }
+                                break;
+                            }
+                        }
+                        if (lenguaje.separador.includes(caracterActual)) {
+
+                        	if (caracterActual == lenguaje.propiedad) {
+                        		token.isClass = true;
+                        	}
+
+                        	if (caracterActual == lenguaje.argumento) {
+                        		token.isArgument = true;
+                        	}
+
+                        	if (!vieneDeOperador && tokenActual.length > 0) {
+                        		token.text = tokenActual;
+                        		token.fila = lineaIndex;
+                        		lineaActualTokens.push(token);
+                        		tokenActual = "";
+                        		tokenPrevio = token;
+                        		token = new Token();
+                        		tokenActual = "";    
+                        		vieneDeOperador = false;                            
+                        	}
+                            // if (!lenguaje.noToken.includes(caracterActual)) {
+                            //  	tokenEnLineas.push(caracterActual);				  				
+                            // } else 
+                            if (lenguaje.separadorCombinado.includes(caracterActual)) {
+                            	tokenActual += caracterActual;
+                            	vieneDeOperador = true;
+                            } else {
+                            	token.text = caracterActual;
+                            	token.fila = lineaIndex;
+                            	lineaActualTokens.push(token);
+                                tokenActual = ""; // reset al token ya que se encontro un separador
+                                tokenPrevio = token;
+                                token = new Token();
+                                vieneDeOperador = false;
+
+                                if (caracterActual == lenguaje.propiedad) {
+                                	token.isProperty = true;
+                                }
+
+                                if (caracterActual == lenguaje.argumento) {
+                                	token.isArgument = true;
+                                }
+                            }
+
+                            if (lenguaje.asignador.includes(tokenPrevio.text)) {
+                            	tokenPrevio.isAssign = true;
+                            }
+                        } else {
+
+                        	if (vieneDeOperador) {
+                        		token.text = tokenActual;
+                        		token.fila = lineaIndex;
+                        		lineaActualTokens.push(token);
+                        		tokenActual = ""; 
+                        		tokenPrevio = token;
+                        		token = new Token();
+                        		vieneDeOperador = false;
+
+                        		if (lenguaje.asignador.includes(tokenPrevio.text)) {
+                        			tokenPrevio.isAssign = true;
+                        		}
+                        	}
+
+                        	if (caracterActual == lenguaje.abrirMetodo || caracterActual == lenguaje.cerrarMetodo) {
+                        		if (tokenActual.length != 0) {
+                        			token.text = tokenActual;
+                        			if (caracterActual == lenguaje.abrirMetodo) {
+                        				token.isMethod = true;	
+                        			}                       
+                        			token.fila = lineaIndex;             
+                        			lineaActualTokens.push(token);
+                        			token = new Token;
+                        		}
+                        		token.text = caracterActual;
+                        		token.fila = lineaIndex;
+                        		lineaActualTokens.push(token);
+                        		tokenPrevio = token;
+                        		tokenActual = "";
+                        		token = new Token();
+                        	} else {
+                        		vieneDeOperador = false;
+                        		esSeparador = false;
+                        		tokenActual += caracterActual;
+                        	}
+                        }
+                    }
+                }
+                // Agregar el token al arreglo si es el token final, ya que no hay ningun separador final
+                if (tokenActual.length > 0) {
+                	token.text = tokenActual;
+                	token.fila = lineaIndex;
+                	lineaActualTokens.push(token);
+                    tokenActual = ""; // reset al token ya que se encontro un separador
+                    tokenPrevio = token;
+                    token = new Token();
+                }
+                let linea = {
+                	string: ProcesarTokens(lineaActualTokens, simbolos),
+                	tokens: lineaActualTokens
+                }
+                tokenEnLineas.push(linea);
+            }
+            console.log(tokenEnLineas);
+            return tokenEnLineas;
+        }
+
+        // Clasificar los tokens 
+        function ProcesarTokens(tokens, simbolos) {
+        	let texto = "";
+        	for (var i = 0; i < tokens.length; i++) {
+        		let token = tokens[i];
+        		let tokenText = token.text;
+                // palabra reservada
+                if (lenguaje.reservadas.includes(tokenText)) {
+                	token.isReserved = true;
+                	token.isVariable = false;
+                	texto += tokenText + AplicarSpan("keyword") + " ";
+                	continue;
+                }
+                // valores bool
+                if (tokenText == "true" || tokenText == "false") {
+                	token.isBool = true;
+                	texto += tokenText + AplicarSpan("bool") + " ";
+                	continue;
+                }
+                // texto literal
+                if (token.isString) {
+                	token.isVariable = false;
+                	texto += tokenText + AplicarSpan("string") + " ";
+                	continue;
+                }
+                // variable
+                if (/[a-zA-Z_$][0-9a-zA-Z_$]*/.test(tokenText)) {
+                	token.isVariable = true;
+                	if (token.isClass) {
+                		texto += tokenText + AplicarSpan("objeto") + " ";
+                	} else if (token.isProperty) {
+                		texto += tokenText + AplicarSpan("miembro") + " ";
+                	} else if (token.isArgument) {
+                		texto += tokenText + AplicarSpan("argumento") + " ";
+                	} else if (token.isMethod) {
+                		texto += tokenText + AplicarSpan("metodo") + " ";
+                	} else {
+                		texto += tokenText + AplicarSpan("variable") + " ";
+                		let simbolo = new Simbolo(); 
+                		simbolo.nombre = tokenText;
+                		simbolo.linea = token.fila;
+                		simbolos.push(simbolo);
+                	}
+                	continue;
+                }
+
+                if (/^-?[0-9]\d*(\.\d+)?(?:e-?\d+)?$/.test(tokenText)) {
+                	token.isNumber = true;
+                	token.isVariable = false;
+                	texto += tokenText + AplicarSpan("numero") + " ";
+                	continue;
+                }
+                if (lenguaje.operador.includes(tokenText)) {
+                	token.isOperator = true;
+                	token.isVariable = false;
+                	texto += tokenText + AplicarSpan("operador") + " ";
+                	continue;
+                }
+                if (lenguaje.logical.includes(tokenText)) {
+                	token.isOperator = true;
+                	token.isVariable = false;
+                	texto += tokenText + AplicarSpan("logico") + " ";
+                	continue;
+                }
+                if (tokenText.length == 1) {
+                	token.isSimbol = true;
+                	token.isVariable = false;
+                	texto += tokenText + AplicarSpan("simbolo") + " ";
+                	continue;
+                }
+                token.isUnknown = true;
+                texto += tokenText + AplicarSpan("desconocido") + " ";
+            }
+            return texto;
+        }
+
+        function AplicarSpan(texto, tipo) {
+        	if (tipo == null) {
+        		tipo = "light";
+        	}
+        	return "<span class=\"badge badge-" + tipo + "\">" + texto + "</span>"
+        }
+    }
+    angular.module('app').directive("ngFileSelect", function() {
+    	return {
+    		template: '<input type="file" id="selectedFile" style="display: none;" />' + '<ng-transclude></ng-transclude>',
+    		transclude: true,
+    		link: function($scope, el) {
+    			el.bind("change", function(e) {
+    				$scope.file = (e.srcElement || e.target).files[0];
+    				$scope.getFile();
+    			})
+    		}
+    	}
+    });
+    angular.module('app').value('ui.config', {
+    	codemirror: {
+    		mode: 'text/javascript',
+    		lineNumbers: true
+    	}
+    });
+
+    class Token {
+    	text = "";
+    	isVariable = true;
+    	isReserved = false;
+    	isClass = false;
+    	isProperty = false;
+    	isArgument = false;
+    	isMethod = false;
+    	isAssign = false;
+    	isOperator = false;
+    	isSimbol = false;
+    	isBool = false;
+    	isString = false;
+    	isUnknown = false;
+    	isNumber = false;
+    	value = "";
+    	fila = 0;
+    }
+
+    class Simbolo {
+    	nombre = "";
+    	linea ="";
+    	valor = "";
+    }
+
+    class Error {
+    	linea= 0
+    	posicion= 0;
+    	error = "";
+    }
 
 })();
-
-
-
