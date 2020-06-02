@@ -67,7 +67,7 @@
 				<button class="btn btn-outline-success my-2" ng-click="controlador.AnalisisSintactico();">
 					Sintáctico
 				</button>
-				<button class="btn btn-outline-success my-2">
+				<button class="btn btn-outline-success my-2" ng-click="controlador.AnalisisSemantico()">
 					Semántico
 				</button>
 			</div>
@@ -143,11 +143,35 @@
 						<div class="col">
 							<div class="card">
 								<div class="card-body">
-									<ul class="list-group list-group-flush px-1 py-1">
-										<li class="list-group-item px-1 py-1" ng-repeat="token in controlador.tokens track by $index">
-											{{token}}
-										</li>
-									</ul>
+									<table class="table">
+										<thead>
+											<tr>
+												<th scope="col"></th>
+												<th scope="col">Nombre</th>
+												<th scope="col">Línea</th>
+												<th scope="col">Valor</th>
+												<th scope="col">Apariciones</th>
+												<th scope="col">Tipo</th>
+												<th scope="col">Mensaje</th>
+											</tr>
+										</thead>
+										<tbody>                                      	
+											<tr ng-repeat="simbolo in controlador.datosSemanticos track by $index">
+												<td>
+													<i ng-show="simbolo.valido" class="fas fa-check-circle text-success">
+													</i>
+													<i ng-show="!simbolo.valido" class="fas fa-exclamation-circle text-danger">
+													</i>
+												</td>
+												<td>{{simbolo.nombre}}</td>
+												<td>{{simbolo.linea + 1}}</td>
+												<td>{{simbolo.valor}}</td>
+												<td>{{simbolo.apariciones}}</td>
+												<td>{{simbolo.tipo}}</td>
+												<td ng-bind-html="simbolo.mensaje"></td>
+											</tr>                                        
+										</tbody>
+									</table>
 								</div>
 							</div>
 						</div>

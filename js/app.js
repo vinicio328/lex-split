@@ -47,11 +47,10 @@
 
 	angular.module('app').factory("fileReader", ["$q", "$log", fileReader]);
 
-	EditorController.$inject = ['$scope', 'lenguaje', 'automata', 'fileReader'];
+	EditorController.$inject = ['$scope', '$filter', 'lenguaje', 'automata', 'fileReader'];
 
-	function EditorController($scope, lenguaje, automata, fileReader) {
-		// assigning this to a local variable makes it easier to 
-		// declare properties and methods in the controller
+	function EditorController($scope, $filter, lenguaje, automata, fileReader) {
+		// vm controlador, en lugar de this, para evitar conflictos de scope 
 		var vm = this;
 
 		// declarar variables del controlador
@@ -60,6 +59,7 @@
 		vm.lenguaje = "js";
 		vm.codigo = ""; // codigo pegado en el text-area
 		vm.erroresSintacticos = [];
+		vm.datosSemanticos = [];
 		vm.CambioEnEditor = function CambioEnEditor() {
 			vm.simbolos = [];
 			//var arrayDeLineas = vm.codigo.match(/[^\r\n]+/g);
@@ -69,8 +69,13 @@
 			}
 		}
 
-		// Analisis simple, declaracion unica lineal, no continua
-		vm.AnalisisSintactico =  function AnalisisSintactico() {        	
+		// Analisis simple, declaracion unica lineal, no valida multimpes lineas
+		// sintaxis validada: 
+		// - declaracion y asignacion de variable
+		// - if / else 
+		// - for
+		// - while
+		vm.AnalisisSintactico = function AnalisisSintactico() {        	
 			vm.erroresSintacticos = [];
 			vm.tokens.forEach(function(linea, lineaIndex) {
 				let cadenaTokens = [];
@@ -87,6 +92,7 @@
 						});
 
 						let esCadena = automata.validarAutomata(automata.automatas.variable, cadenaTokens);
+						linea.validaSintactica = esCadena;
 						if (!esCadena) {
 							let error = new Error();
 							error.linea = lineaIndex +1;
@@ -117,6 +123,7 @@
 							});
 
 							let esCadena = automata.validarAutomata(automata.automatas.if, cadenaTokens);
+							linea.validaSintactica = esCadena;
 							if (!esCadena) {
 								let error = new Error();
 								error.linea = lineaIndex +1;
@@ -145,6 +152,7 @@
 							});
 
 							let esCadena = automata.validarAutomata(automata.automatas.for, cadenaTokens);
+							linea.validaSintactica = esCadena;
 							if (!esCadena) {
 								let error = new Error();
 								error.linea = lineaIndex +1;
@@ -173,6 +181,7 @@
 							});
 
 							let esCadena = automata.validarAutomata(automata.automatas.while, cadenaTokens);
+							linea.validaSintactica = esCadena;
 							if (!esCadena) {
 								let error = new Error();
 								error.linea = lineaIndex +1;
@@ -199,6 +208,104 @@
 			return token;
 		}
 
+		vm.AnalisisSemantico = function AnalisisSemantico() {
+			vm.datosSemanticos = [];
+
+			let lineasValidas = $filter('filter')(vm.tokens, {
+				validaSintactica: true
+			});
+
+			lineasValidas.forEach(function (linea, index) {								
+				let token = linea.tokens[0];
+				// declaracion de variable
+				if (lenguaje.variable.includes(token.text)) {
+					let variable = linea.tokens[1];
+
+					// obtener el resto de variables
+					let tokens = linea.tokens.slice(3);
+					let variables = ObtenerVariables(tokens);
+
+					let data = new SimboloSemantico();
+					tokens.pop();
+					data.nombre = variable.text;
+					data.linea = token.fila;
+					data.valor = JoinTokens(tokens);
+					data.apariciones.push(token.fila);
+
+					let variableData = $filter('filter')(vm.datosSemanticos, {
+							nombre: variable.text
+						});
+
+					if (variables.length == 0) {
+												
+						if (tokens.length == 1) {
+							let tokenTipo = tokens[0];
+							if (tokenTipo.isNumber) {
+								data.tipo = "numeric";
+							}
+							else if (token.isString) {
+								data.tipo = "string";
+							}
+							else if (token.isBool) {
+								data.tipo = "bool";
+							}
+						} else {
+							data.tipo = "unknown";
+						}
+
+						if (variableData == undefined || variableData.length == 0) {
+							data.valido = true;
+							vm.datosSemanticos.push(data);
+						}
+						else {
+							data.mensaje = "La variable ya esta definida";
+							data.valido = false;
+							vm.datosSemanticos.push(data);	
+
+							variableData.forEach(function(dataExistente, dataIndex) {
+								dataExistente.apariciones.push(token.fila);
+							});
+						}
+
+					}
+					else {
+						variables.forEach(function (variableUsada, variableIndex) {
+							let variableData = $filter('filter')(vm.datosSemanticos, {
+								nombre: variableUsada.text
+							});
+
+							if (variableData == undefined || variableData.length == 0) {
+								data.valido = false;
+								data.mensaje += "\nVariable no definida: " + AplicarSpan(variableUsada.text);
+								return false;
+							}
+							else {
+								// el mejor de los casos solo hay uno 
+								let originalData = variableData[0];
+								originalData.apariciones.push(token.fila);
+							}
+						});
+
+						if (variableData == undefined || variableData.length == 0) {
+
+						} else {
+							data.mensaje += "\nLa variable ya esta definida";
+							data.valido = false;
+
+							variableData.forEach(function(dataExistente, dataIndex) {
+								dataExistente.apariciones.push(token.fila);
+							});
+						}
+						vm.datosSemanticos.push(data);
+					}
+
+				}
+
+			});
+
+
+		}
+
 		vm.CambioDeLenguaje = function() {
 			CambiarEntorno(vm.lenguaje)
 		}
@@ -206,6 +313,20 @@
 		function CambiarEntorno(lenguaje) {
 			// body...
 			// TODO not supported yet, just JS
+		}
+
+		function JoinTokens(tokens) {
+			let text = "";
+			tokens.forEach(function(token, index) {
+				text += token.text + " ";
+			});
+			return text;
+		}
+		function ObtenerVariables(tokens) {
+			let variables = $filter('filter')(tokens, {
+				isVariable: true
+			});			
+			return variables;
 		}
 
 		// Uso de scope porque se usa desde la directiva
@@ -420,6 +541,7 @@
 					token = new Token();
 				}
 				let linea = {
+					validaSintactica: false,
 					string: ProcesarTokens(lineaActualTokens, simbolos),
 					tokens: lineaActualTokens
 				}
@@ -435,6 +557,7 @@
 			for (var i = 0; i < tokens.length; i++) {
 				let token = tokens[i];
 				let tokenText = token.text;
+				token.isVariable = false;
 				// palabra reservada
 				if (lenguaje.reservadas.includes(tokenText)) {
 					token.isReserved = true;
@@ -475,6 +598,7 @@
 						texto += tokenText + AplicarSpan("metodo") + " ";
 					} else {
 						texto += tokenText + AplicarSpan("variable") + " ";
+						token.isVariable = true;
 						let simbolo = new Simbolo(); 
 						simbolo.nombre = tokenText;
 						simbolo.linea = token.fila;
@@ -485,20 +609,17 @@
 
 				if (lenguaje.operador.includes(tokenText)) {
 					token.isOperator = true;
-					token.isVariable = false;
 					texto += tokenText + AplicarSpan("operador") + " ";
 					continue;
 				}
 				if (lenguaje.logical.includes(tokenText)) {
 					token.isOperator = true;
 					token.isLogical = true;
-					token.isVariable = false;
 					texto += tokenText + AplicarSpan("logico") + " ";
 					continue;
 				}
 				if (tokenText.length == 1) {
 					token.isSimbol = true;
-					token.isVariable = false;
 					texto += tokenText + AplicarSpan("simbolo") + " ";
 					continue;
 				}
@@ -566,6 +687,16 @@
 		linea= 0
 		posicion= 0;
 		error = "";
+	}
+
+	class SimboloSemantico {
+		nombre = "";
+		linea = 0;
+		valor = "";
+		apariciones = [];
+		valido = true;		
+		error = "";
+		tipo = "";
 	}
 
 })();
