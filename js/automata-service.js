@@ -90,6 +90,13 @@ Array.prototype.unique = function() {
 				i: 1,
 				a: [9],
 				w: [[1, 'while', 2], [2, '(', 3], [3, '@identifier', 4], [4, '@comparador', 5], [5, '@valor', 6], [5, '@bool', 6], [5, '@identifier', 6], [3, '@bool', 6], [6, ')', 7], [7, '{', 8], [8, '}', 9]]
+			},
+			do: {            	
+				f: ['do', 'while', '(', ')', '@identifier', '@valor', '@comparador', '{', '}', '@bool'],
+				q: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+				i: 1,
+				a: [10],
+				w: [[1, 'do', 2], [2, '{', 3], [3, '}', 4], [4, 'while', 5], [5, '(',6], [6, '@identifier', 7], [7, '@comparador', 8], [8, '@valor', 9], [8, '@bool', 9], [8, '@identifier', 9], [6, '@bool', 9], [9, ')', 10]]
 			}
 		};
 

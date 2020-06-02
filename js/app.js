@@ -190,6 +190,35 @@
                                 vm.erroresSintacticos.push(error);
                             }
                             return true;
+                        } else if (primerToken.text == "do") {
+                            primerToken.noConvert = true;
+                            cadenaTokens.push(primerToken);
+                            linea.tokens.forEach(function(token, index) {
+                                if (index == 0) {
+                                    return true;
+                                } // continue
+                                if (automata.automatas.do.f.includes(token.text)) {
+                                    token.noConvert = true;
+                                    cadenaTokens.push(token);
+                                } else {
+                                    token.forceBool = true;
+                                    cadenaTokens.push(token);
+                                }
+                            });
+                            let esCadena = automata.validarAutomata(automata.automatas.do, cadenaTokens);
+                            linea.validaSintactica = esCadena;
+                            if (!esCadena) {
+                                let error = new Error();
+                                error.tipo = AplicarSpan(primerToken.text);
+                                error.linea = lineaIndex + 1;
+                                if (automata.error.length > 0) {
+                                    error.error = "Error en elemento " + AplicarSpan(automata.error);
+                                } else {
+                                    error.error = AplicarSpan("do") + " incompleto";
+                                }
+                                vm.erroresSintacticos.push(error);
+                            }
+                            return true;
                         }
                     }
                 }
