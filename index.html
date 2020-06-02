@@ -82,7 +82,7 @@
 						Editor
 					</h5>
 					<div class="form-group">
-						<textarea class="form-control" id="editor" name="editor" ng-change="controlador.CambioEnEditor()" ng-model="controlador.codigo" ng-model-options="{ debounce: 1000 }" rows="12" ui-codemirror="">
+						<textarea class="form-control" id="editor" name="editor" ng-change="controlador.CambioEnEditor()" ng-model="controlador.codigo" ng-model-options="{ debounce: 1000 }" rows="12" ui-codemirror>
 						</textarea>
 					</div>
 				</div>
@@ -98,7 +98,7 @@
 								</div>
 								<div class="card-body">
 									<ul class="list-group list-group-flush px-1 py-1">
-										<li class="list-group-item px-1 py-1" ng-bind-html="token.string" ng-repeat="token in controlador.tokens track by $index">
+										<li class="list-group-item px-1 py-1" ng-bind-html="controlador.RenderToken(token.string)" ng-repeat="token in controlador.tokens track by $index">
 										</li>
 									</ul>
 								</div>

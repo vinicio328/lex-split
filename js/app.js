@@ -192,6 +192,12 @@
 			});
 		}
 
+		vm.RenderToken =function RenderToken(token) {
+			if (token.length == 0) {
+				return "<span class=\"badge badge-light\">Linea</span>";
+			}
+			return token;
+		}
 
 		vm.CambioDeLenguaje = function() {
 			CambiarEntorno(vm.lenguaje)
@@ -476,7 +482,7 @@
 					}
 					continue;
 				}	
-							
+
 				if (lenguaje.operador.includes(tokenText)) {
 					token.isOperator = true;
 					token.isVariable = false;
