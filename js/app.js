@@ -93,8 +93,9 @@
 
 						let esCadena = automata.validarAutomata(automata.automatas.variable, cadenaTokens);
 						linea.validaSintactica = esCadena;
-						if (!esCadena) {
+						if (!esCadena) {							
 							let error = new Error();
+							error.tipo = AplicarSpan(primerToken.text);
 							error.linea = lineaIndex +1;
 							if (automata.error.length > 0) {
 								error.error = "Error en elemento " + AplicarSpan(automata.error); 
@@ -126,6 +127,7 @@
 							linea.validaSintactica = esCadena;
 							if (!esCadena) {
 								let error = new Error();
+								error.tipo = AplicarSpan(primerToken.text);
 								error.linea = lineaIndex +1;
 								if (automata.error.length > 0) {
 									error.error = "Error en elemento " + AplicarSpan(automata.error); 
@@ -155,6 +157,7 @@
 							linea.validaSintactica = esCadena;
 							if (!esCadena) {
 								let error = new Error();
+								error.tipo = AplicarSpan(primerToken.text);
 								error.linea = lineaIndex +1;
 								if (automata.error.length > 0) {
 									error.error = "Error en elemento " + AplicarSpan(automata.error); 
@@ -184,6 +187,7 @@
 							linea.validaSintactica = esCadena;
 							if (!esCadena) {
 								let error = new Error();
+								error.tipo = AplicarSpan(primerToken.text);
 								error.linea = lineaIndex +1;
 								if (automata.error.length > 0) {
 									error.error = "Error en elemento " + AplicarSpan(automata.error); 
@@ -243,15 +247,16 @@
 							if (tokenTipo.isNumber) {
 								data.tipo = "numeric";
 							}
-							else if (token.isString) {
+							else if (tokenTipo.isString) {
 								data.tipo = "string";
 							}
-							else if (token.isBool) {
+							else if (tokenTipo.isBool) {
 								data.tipo = "bool";
 							}
 						} else {
-							data.tipo = "unknown";
+							data.tipo = "mixto";
 						}
+						data.tipo = AplicarSpan(data.tipo);
 
 						if (variableData == undefined || variableData.length == 0) {
 							data.valido = true;
@@ -269,6 +274,8 @@
 
 					}
 					else {
+						data.tipo = "mixto";
+						data.tipo = AplicarSpan(data.tipo);
 						variables.forEach(function (variableUsada, variableIndex) {
 							let variableData = $filter('filter')(vm.datosSemanticos, {
 								nombre: variableUsada.text
@@ -687,6 +694,7 @@
 		linea= 0
 		posicion= 0;
 		error = "";
+		tipo = "";
 	}
 
 	class SimboloSemantico {

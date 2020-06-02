@@ -22,7 +22,17 @@
 	</script>
 	<!-- Create a simple CodeMirror instance -->
 	<link href="lib/codemirror.css" rel="stylesheet">        
-</link>
+	</link>
+	<style>
+		.tableFixHead          { overflow-y: auto; height: 270px; }
+		.tableFixHead thead th { position: sticky; top: 0; }
+
+		/* Just common table stuff. Really. */
+		table  { border-collapse: collapse; width: 100%; }
+		.tableFixHead th     { background: white; }
+		
+		 
+	</style>
 <script src="lib/codemirror.js">
 </script>
 </head>
@@ -30,7 +40,7 @@
 	<main class="container-fluid" ng-controller="EditorController as controlador" role="main">
 		<nav class="navbar navbar-dark bg-dark">
 			<a class="navbar-brand" href="#">
-				Compiladores
+				UMG - Compiladores
 			</a>
 			<img src="logo-1.png" height="50">
 		</nav>
@@ -90,13 +100,13 @@
 					<h5>
 						Léxico
 					</h5>
-					<div class="row" style="max-height: 260px !important; overflow: auto;">
+					<div class="row" style="max-height: 300px !important; overflow: auto;">
 						<div class="col">
 							<div class="card">
 								<div class="card-header">
 									Tokens
 								</div>
-								<div class="card-body">
+								<div class="card-body"  style="max-height: 240px !important; overflow: auto;">
 									<ul class="list-group list-group-flush px-1 py-1">
 										<li class="list-group-item px-1 py-1" ng-bind-html="controlador.RenderToken(token.string)" ng-repeat="token in controlador.tokens track by $index">
 										</li>
@@ -108,28 +118,37 @@
 				</div>
 			</div>
 			<div class="row row-cols-2">
-				<div class="col">
+				<div class="col" >
 					<h5>
 						Sintáctico
 					</h5>
-					<div class="row" style="max-height: 260px !important; overflow: auto;">
+					<div class="row" style="max-height: 320px !important; overflow: auto;">
 						<div class="col">
 							<div class="card">
 								<div class="card-body">
-									<table class="table">
-										<thead>
-											<tr>
-												<th scope="col">Línea</th>
-												<th scope="col">Error</th>
-											</tr>
-										</thead>
-										<tbody>                                      	
-											<tr ng-repeat="error in controlador.erroresSintacticos track by $index">
-												<td>{{error.linea}}</td>
-												<td ng-bind-html="error.error"></td>
-											</tr>                                        
-										</tbody>
-									</table>
+									<div class="tableFixHead">
+										<table class="table">
+											<thead>
+												<tr>
+													<th></th>
+													<th scope="col">Línea</th>
+													<th scope="col">Tipo</th>
+													<th scope="col">Error</th>
+												</tr>
+											</thead>
+											<tbody>                                      	
+												<tr ng-repeat="error in controlador.erroresSintacticos track by $index">
+													<td>
+														<i class="fas fa-exclamation-circle text-danger">
+														</i>
+													</td>
+													<td>{{error.linea}}</td>
+													<td ng-bind-html="error.tipo"></td>
+													<td ng-bind-html="error.error"></td>
+												</tr>                                        
+											</tbody>
+										</table>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -139,39 +158,41 @@
 					<h5>
 						Semántico
 					</h5>
-					<div class="row" style="max-height: 260px !important; overflow: auto;">
+					<div class="row" style="max-height: 320px !important; overflow: auto;">
 						<div class="col">
 							<div class="card">
 								<div class="card-body">
-									<table class="table">
-										<thead>
-											<tr>
-												<th scope="col"></th>
-												<th scope="col">Nombre</th>
-												<th scope="col">Línea</th>
-												<th scope="col">Valor</th>
-												<th scope="col">Apariciones</th>
-												<th scope="col">Tipo</th>
-												<th scope="col">Mensaje</th>
-											</tr>
-										</thead>
-										<tbody>                                      	
-											<tr ng-repeat="simbolo in controlador.datosSemanticos track by $index">
-												<td>
-													<i ng-show="simbolo.valido" class="fas fa-check-circle text-success">
-													</i>
-													<i ng-show="!simbolo.valido" class="fas fa-exclamation-circle text-danger">
-													</i>
-												</td>
-												<td>{{simbolo.nombre}}</td>
-												<td>{{simbolo.linea + 1}}</td>
-												<td>{{simbolo.valor}}</td>
-												<td>{{simbolo.apariciones}}</td>
-												<td>{{simbolo.tipo}}</td>
-												<td ng-bind-html="simbolo.mensaje"></td>
-											</tr>                                        
-										</tbody>
-									</table>
+									<div class="tableFixHead">
+										<table class="table">
+											<thead>
+												<tr>
+													<th scope="col"></th>
+													<th scope="col">Nombre</th>
+													<th scope="col">Línea</th>
+													<th scope="col">Valor</th>
+													<th scope="col">Apariciones</th>
+													<th scope="col">Tipo</th>
+													<th scope="col">Mensaje</th>
+												</tr>
+											</thead>
+											<tbody>                                      	
+												<tr ng-repeat="simbolo in controlador.datosSemanticos track by $index">
+													<td>
+														<i ng-show="simbolo.valido" class="fas fa-check-circle text-success">
+														</i>
+														<i ng-show="!simbolo.valido" class="fas fa-exclamation-circle text-danger">
+														</i>
+													</td>
+													<td>{{simbolo.nombre}}</td>
+													<td>{{simbolo.linea + 1}}</td>
+													<td>{{simbolo.valor}}</td>
+													<td>{{simbolo.apariciones}}</td>
+													<td ng-bind-html="simbolo.tipo"></td>
+													<td ng-bind-html="simbolo.mensaje"></td>
+												</tr>                                        
+											</tbody>
+										</table>
+									</div>
 								</div>
 							</div>
 						</div>
