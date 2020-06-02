@@ -89,7 +89,7 @@ Array.prototype.unique = function() {
 				q: [1, 2, 3, 4, 5, 6, 7, 8, 9],
 				i: 1,
 				a: [9],
-				w: [[1, 'while', 2], [2, '(', 3], [3, '@identifier', 4], [4, '@comparador', 5], [5, '@valor', 6], [3, '@bool', 6], [6, ')', 7], [7, '{', 8], [8, '}', 9]]
+				w: [[1, 'while', 2], [2, '(', 3], [3, '@identifier', 4], [4, '@comparador', 5], [5, '@valor', 6], [5, '@bool', 6], [5, '@identifier', 6], [3, '@bool', 6], [6, ')', 7], [7, '{', 8], [8, '}', 9]]
 			}
 		};
 

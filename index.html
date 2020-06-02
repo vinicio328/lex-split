@@ -54,20 +54,6 @@
 					<i class="fas fa-save">
 					</i>
 				</button>
-				<div class="pull-right" style="float:right;">
-					<select class="form-control" ng-model="controlador.lenguaje">
-						<option value="js">
-							JS
-						</option>
-						<option value="csharp">
-							C#
-						</option>
-					</select>
-				</div>
-			</div>
-		</div>
-		<div class="row" style="margin:5px;">
-			<div class="col">
 				<button class="btn btn-outline-success my-2" ng-click="controlador.CambioEnEditor();">
 					Léxico
 				</button>
@@ -80,11 +66,18 @@
 				<button class="btn btn-outline-success my-2" ng-click="controlador.AnalisisSemantico()">
 					Semántico
 				</button>
+				<div class="pull-right" style="float:right;">
+					<select class="form-control" ng-model="controlador.lenguaje">
+						<option value="js">
+							JS
+						</option>
+						<option value="csharp">
+							C#
+						</option>
+					</select>
+				</div>
 			</div>
 		</div>
-		<div class="clear">
-		</div>
-		<br>
 		<div class="container-fluid">
 			<div class="row row-cols-2">
 				<div class="col">
@@ -92,7 +85,7 @@
 						Editor
 					</h5>
 					<div class="form-group">
-						<textarea class="form-control" id="editor" name="editor" ng-change="controlador.CambioEnEditor()" ng-model="controlador.codigo" ng-model-options="{ debounce: 1000 }" rows="12" ui-codemirror>
+						<textarea class="form-control" id="editor" name="editor" ng-change="controlador.CambioEnEditor()" ng-model="controlador.codigo" ng-model-options="{ debounce: 1000 }" rows="15" ui-codemirror>
 						</textarea>
 					</div>
 				</div>
@@ -100,13 +93,13 @@
 					<h5>
 						Léxico
 					</h5>
-					<div class="row" style="max-height: 300px !important; overflow: auto;">
+					<div class="row" style="max-height: 320px !important; overflow: auto;">
 						<div class="col">
 							<div class="card">
 								<div class="card-header">
 									Tokens
 								</div>
-								<div class="card-body"  style="max-height: 240px !important; overflow: auto;">
+								<div class="card-body"  style="max-height: 260px !important; overflow: auto;">
 									<ul class="list-group list-group-flush px-1 py-1">
 										<li class="list-group-item px-1 py-1" ng-bind-html="controlador.RenderToken(token.string)" ng-repeat="token in controlador.tokens track by $index">
 										</li>
@@ -184,7 +177,7 @@
 														</i>
 													</td>
 													<td>{{simbolo.nombre}}</td>
-													<td>{{simbolo.linea + 1}}</td>
+													<td>{{simbolo.linea}}</td>
 													<td>{{simbolo.valor}}</td>
 													<td>{{simbolo.apariciones}}</td>
 													<td ng-bind-html="simbolo.tipo"></td>
