@@ -230,7 +230,7 @@
                     data.nombre = variable.text;
                     data.linea = token.fila + 1;
                     data.valor = JoinTokens(tokens);
-                    data.apariciones.push(token.fila);
+                    data.apariciones.push(token.fila + 1);
                     let variableData = $filter('filter')(vm.datosSemanticos, {
                         nombre: variable.text
                     });
@@ -262,7 +262,7 @@
                                 }
                                 vm.datosSemanticos.push(data);
                                 variableData.forEach(function(dataExistente, dataIndex) {
-                                    dataExistente.apariciones.push(token.fila);
+                                    dataExistente.apariciones.push(token.fila +1);
                                 });
                             }
                         } else {
@@ -289,7 +289,7 @@
                             } else {
                                 // el mejor de los casos solo hay uno 
                                 let originalData = variableValida[0];
-                                originalData.apariciones.push(token.fila);
+                                originalData.apariciones.push(token.fila + 1);
                             }
                         });
                         if (variableData == undefined || variableData.length == 0) {} else {
@@ -298,7 +298,7 @@
                                 data.valido = false;
                             }
                             variableData.forEach(function(dataExistente, dataIndex) {
-                                dataExistente.apariciones.push(token.fila);
+                                dataExistente.apariciones.push(token.fila + 1);
                             });
                         }
                         vm.datosSemanticos.push(data);
@@ -310,8 +310,11 @@
                     data.tipo = AplicarSpan(token.text);
                     data.linea = token.fila + 1;
                     variables.forEach(function(variableUsada, variableIndex) {
-                        let variableData = $filter('filter')(vm.datosSemanticos, {
-                            nombre: variableUsada.text
+                        let variableData = $filter('filter')(vm.datosSemanticos, function (value) {                        	
+                        	if (value.nombre == variableUsada.text) {
+                        		return true;
+                        	}
+                        	return false;
                         });
                         let variableValida = $filter('filter')(variableData, {
                             valido: true
@@ -323,13 +326,14 @@
                         } else {
                             // el mejor de los casos solo hay uno 
                             let originalData = variableValida[0];
-                            originalData.apariciones.push(token.fila);
+                            originalData.apariciones.push(token.fila + 1);
                         }
                     });
                     vm.datosSemanticos.push(data);
                 }
             });
         }
+
         vm.CambioDeLenguaje = function() {
             CambiarEntorno(vm.lenguaje)
         }
